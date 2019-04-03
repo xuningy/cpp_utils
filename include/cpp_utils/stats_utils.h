@@ -23,6 +23,8 @@
 #include <cmath>
 #include <limits>
 #include <random>
+#include <stdexcept>
+#include <unordered_set>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -53,7 +55,7 @@ VecXt<T> RangeSample(const T lb, const T ub, const int k) {
     samples[i] = distribution(generator);
   }
   return samples;
-}
+};
 
 // DataSample draws k samples sampled uniformly at random, with replacement,
 // from the data in `data`.
@@ -61,9 +63,11 @@ template <typename T>
 std::vector<T> DataSample(const std::vector<T> &data, const int k) {
   size_t N = data.size();
 
-  // Check that input arguments are valid.
-  assert(N > 1);
-  assert(k != 0);
+  // Check that the input arguments are valid.
+  if (N == 0)
+    throw std::invalid_argument("[stats_utils::DataSample] probability vector size needs to be larger than 1!");
+  if (k <= 0)
+    throw std::invalid_argument("[stats_utils::DataSample] Number to sample must be larger than 0!");
 
   // Generate uniform integer distribution.
   std::random_device rd;
@@ -79,6 +83,37 @@ std::vector<T> DataSample(const std::vector<T> &data, const int k) {
   return sampled_data;
 }
 
+// UniformDiscreteSample draws k samples sampled from a discrete range from 0
+// to N, without replacement. Adapted from: https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement
+// Originally from Robert Floyd  http://www.nowherenearithaca.com/2013/05/robert-floyds-tiny-and-beautiful.html
+std::vector<int> UniformDiscreteSample(int N, int k) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+
+  std::unordered_set<int> elems;
+  for (int r = N - k; r < N; ++r) {
+    int v = std::uniform_int_distribution<>(1, r)(gen);
+
+    // there are two cases.
+    // v is not in candidates ==> add it
+    // v is in candidates ==> well, r is definitely not, because
+    // this is the first iteration in the loop that we could've
+    // picked something that big.
+
+    if (!elems.insert(v).second) {
+        elems.insert(r);
+    }
+  }
+
+  // ok, now we have a set of k elements. but now
+  // it's in a [unknown] deterministic order.
+  // so we have to shuffle it:
+
+  std::vector<int> result(elems.begin(), elems.end());
+  std::shuffle(result.begin(), result.end(), gen);
+  return result;
+}
+
 // DiscreteSample draws k samples sampled at random according to distribution
 // `prob` with replacement, where `prob` is a probability array whose elements
 // sum to 1. T is one of { float, double }.
@@ -87,22 +122,26 @@ std::vector<int> DiscreteSample(const std::vector<T> &prob, const int k) {
   size_t N = prob.size();
 
   // Check that the input arguments are valid.
-  assert(N > 1);
-  assert(k != 0);
+  if (N == 0)
+    throw std::invalid_argument("[stats_utils::DiscreteSample] probability vector size needs to be larger than 1!");
+  if (k <= 0)
+    throw std::invalid_argument("[stats_utils::DiscreteSample] Number to sample must be larger than 0!");
 
   // Check that the sum of the probabilities is equal to 1 (accommodating
   // rounding errors).
   T prob_sum = 0;
   for (auto &p : prob)
     prob_sum += p;
-  assert(std::abs(prob_sum - 1.0) < kSufficientlySmallFloat);
+
+  // TODO@Xuning: instead of throwing an error, normalize the vector instead.
+  if (std::abs(prob_sum - 1.0) >= kSufficientlySmallFloat)
+    throw std::invalid_argument("[stats_utils::DiscreteSample] Probability vector does not add up to 1!");
 
   // Create index vector.
   std::vector<int> idx;
-  for (int i = 0; i <= N; i += 1) {
+  for (size_t i = 0; i <= N; i += 1) {
     idx.push_back(i);
   }
-  assert(idx.size() == N + 1);
 
   // Generate piecewise constant distribution.
   std::random_device rd;
@@ -126,9 +165,10 @@ std::vector<int> DiscreteSample(const std::vector<T> &prob, const int k) {
 //  sigma:  matrix of size MxM
 template <typename T>
 T GaussianPdf(const VecXt<T> &x, const VecXt<T> &mean, const MatXt<T> &sigma) {
-  assert(x.rows() == mean.rows());
-  assert(x.cols() == mean.cols());
-  assert(sigma.rows() == sigma.cols());
+  if (x.rows() != mean.rows() || x.cols() != mean.cols())
+    throw std::invalid_argument("[stats_utils::GaussianPdf] Size of x does not equal to size of mean (should be a vector of n elements each)");
+  if (sigma.rows() != sigma.cols())
+    throw std::invalid_argument("[stats_utils::GaussianPdf] Sigma is not square.");
 
   // Precompute constants.
   int n = std::max(x.rows(), x.cols());
@@ -156,9 +196,6 @@ template <typename T> MatXt<T> Covariance(const MatXt<T> &samples) {
   MatXt<T> centered = samples.colwise() - mean;
   MatXt<T> cov = (centered * centered.transpose()) / N;
 
-  // Check that the sizes are correct.
-  assert(cov.rows() == sample_dim);
-  assert(cov.cols() == sample_dim);
   return cov;
 }
 
