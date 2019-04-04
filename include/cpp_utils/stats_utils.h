@@ -57,10 +57,30 @@ VecXt<T> RangeSample(const T lb, const T ub, const int k) {
   return samples;
 };
 
-// DataSample draws k samples sampled uniformly at random, with replacement,
-// from the data in `data`.
+// RangeSample draws k samples of type T from the range [lb, ub), and returns
+// a std::vector object. T is one of { int, float, double }.
 template <typename T>
-std::vector<T> DataSample(const std::vector<T> &data, const int k) {
+std::vector<T> RangeSample(const T lb, const T ub, const int k) {
+
+  // Generate uniform real distribution from lb to ub.
+  std::random_device rd;
+  std::mt19937 generator(rd());
+  std::uniform_real_distribution<> distribution(lb, ub);
+
+  // Sample from range.
+  std::vector<T> samples;
+  for (int i = 0; i < k; i++) {
+    samples.push_back(distribution(generator));
+  }
+  return samples;
+};
+
+// DataSample draws k samples sampled uniformly at random from Container
+// `data`, with replacement, and returns the sampled values in the same type
+// Container.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+Container<T> DataSample(const Container<T> &data, const int k) {
   size_t N = data.size();
 
   // Check that the input arguments are valid.
@@ -75,7 +95,7 @@ std::vector<T> DataSample(const std::vector<T> &data, const int k) {
   std::uniform_int_distribution<int> distribution(0, N - 1);
 
   // Sample from data.
-  std::vector<T> sampled_data;
+  Container<T> sampled_data;
   for (int i = 0; i < k; i++) {
     int j = distribution(generator);
     sampled_data.push_back(data[j]);
@@ -117,8 +137,10 @@ std::vector<int> UniformDiscreteSample(int N, int k) {
 // DiscreteSample draws k samples sampled at random according to distribution
 // `prob` with replacement, where `prob` is a probability array whose elements
 // sum to 1. T is one of { float, double }.
-template <typename T>
-std::vector<int> DiscreteSample(const std::vector<T> &prob, const int k) {
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+Container<int, std::allocator<int>> DiscreteSample(const Container<T> &prob,
+                                                   const int k) {
   size_t N = prob.size();
 
   // Check that the input arguments are valid.
@@ -130,7 +152,7 @@ std::vector<int> DiscreteSample(const std::vector<T> &prob, const int k) {
   // Check that the sum of the probabilities is equal to 1 (accommodating
   // rounding errors).
   T prob_sum = 0;
-  for (auto &p : prob)
+  for (const T &p : prob)
     prob_sum += p;
 
   // TODO@Xuning: instead of throwing an error, normalize the vector instead.
@@ -138,7 +160,7 @@ std::vector<int> DiscreteSample(const std::vector<T> &prob, const int k) {
     throw std::invalid_argument("[stats_utils::DiscreteSample] Probability vector does not add up to 1!");
 
   // Create index vector.
-  std::vector<int> idx;
+  Container<int, std::allocator<int>> idx;
   for (size_t i = 0; i <= N; i += 1) {
     idx.push_back(i);
   }
@@ -150,7 +172,7 @@ std::vector<int> DiscreteSample(const std::vector<T> &prob, const int k) {
                                                       prob.begin());
 
   // Sample according to the probabilities.
-  std::vector<int> sampled_idx;
+  Container<int, std::allocator<int>> sampled_idx;
   for (int i = 0; i < k; i += 1) {
     sampled_idx.push_back(std::floor(distribution(generator)));
   }
