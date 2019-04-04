@@ -30,6 +30,17 @@
 #include <Eigen/Geometry>
 
 // Defines a collection of statistics utility functions.
+//
+// Supported container types: Should be supported for all Sequence containers
+// https://en.cppreference.com/w/cpp/container#Sequence_containers
+//    std::array
+//    std::vector
+//    std::deque
+//    std::forward_list
+//    std::list
+//
+// Certain functions support only Eigen types only; see signatures below.
+//
 namespace stats_utils {
 
 // Define a sufficiently small value, but
