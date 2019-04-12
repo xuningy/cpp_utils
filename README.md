@@ -2,15 +2,17 @@
 #### Author: Xuning Yang <xuning@cmu.edu>
 A set of C++ utility functions that I have written for research and development purposes.
 
-## Examples
-For the following examples, suppose:
+### `vector_utils.h`: Defines a collection of vector utility functions.
+Given input vectors:
 
 ```
 std::vector<T> vec;
 std::deque<T> deq;
 ```
 and `T` can be any type.
-###### `vector_utils.h`: Defines a collection of vector utility functions.
+
+-----------------
+
 Sort:
 ```
 std::vector<T> vec_sorted;              // sorted vector will be stored here

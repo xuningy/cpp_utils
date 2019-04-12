@@ -157,11 +157,21 @@ template <typename T,
           template <typename, typename = std::allocator<T>> class InContainer,
           template <typename, typename = std::allocator<T>> class OutContainer>
 void Normalize(const InContainer<T>& vec, OutContainer<T> *normalized_vec) {
-  T sum = std::accumulate(vec.begin(), vec.end(), 0);
+  T sum = 0;
+  for (auto &elem : vec) {
+    sum += elem;
+  }
   normalized_vec->clear();
-
-  for (const T &elem : vec) {
-    normalized_vec->push_back(elem/sum);
+  std::cout << "sum: " << sum << std::endl;
+  if (sum == 1) {
+    *normalized_vec = vec;
+  } else if (sum == 0) {
+    normalized_vec->assign(vec.size(), 1.0/vec.size());
+  } else {
+    float factor = 1.0/sum; // doing a single division and then multiplication lowers the numerical instability associated with division.
+    for (const T &elem : vec) {
+      normalized_vec->push_back(elem * factor);
+    }
   }
 
   return;

@@ -44,7 +44,7 @@
 namespace stats_utils {
 
 // Define a sufficiently small value, but
-static constexpr float kSufficientlySmallFloat = 0.00001;
+static constexpr float kSufficientlySmallFloat = 0.001;
 
 template <typename T> using VecXt = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template <typename T>

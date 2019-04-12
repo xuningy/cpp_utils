@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <cassert>
 #include <cmath>
+#include <stdexcept>
 #include <vector>
 
 // Defines a collection of linear algebra utils.
@@ -30,9 +30,17 @@ namespace linalg_utils {
 // Generates `N` linearly spaced values between `lb` and `ub`, inclusive.
 template <typename T>
 std::vector<T> Linspace(const T lb, const T ub, const int N) {
-  // Check that the input arguments are acceptable.
-  assert(N > 1);
-  assert(ub > lb);
+  if (lb == ub && N == 1) {
+    std::vector<T> vec;
+    vec.push_back(lb);
+    return vec;
+  }
+
+  // Check that the input arguments are valid.
+  if (N == 0)
+    throw std::invalid_argument("[linalg_utils::Linspace] probability vector size needs to be larger than 1!");
+  if (lb >= ub)
+    throw std::invalid_argument("[linalg_utils::Linspace] Number to sample must be larger than 0!");
 
   // Generate the evenly spaced vector.
   T h = (ub - lb) / static_cast<T>(N - 1);
