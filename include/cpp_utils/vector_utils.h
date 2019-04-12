@@ -162,7 +162,6 @@ void Normalize(const InContainer<T>& vec, OutContainer<T> *normalized_vec) {
     sum += elem;
   }
   normalized_vec->clear();
-  std::cout << "sum: " << sum << std::endl;
   if (sum == 1) {
     *normalized_vec = vec;
   } else if (sum == 0) {

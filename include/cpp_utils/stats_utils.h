@@ -50,8 +50,8 @@ template <typename T> using VecXt = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template <typename T>
 using MatXt = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
-// RangeSample draws k samples of type T from the range [lb, ub), and returns
-// an Eigen::VectorXd object. T is one of { int, float, double }.
+// RangeSample draws k samples of type T uniformly from the range [lb, ub), and
+// returns an Eigen::VectorXd object. T is one of { int, float, double }.
 template <typename T>
 VecXt<T> RangeSample(const T lb, const T ub, const int k) {
 
@@ -68,8 +68,8 @@ VecXt<T> RangeSample(const T lb, const T ub, const int k) {
   return samples;
 };
 
-// RangeSample draws k samples of type T from the range [lb, ub), and returns
-// a std::vector object. T is one of { int, float, double }.
+// RangeSample draws k samples of type T uniformly from the range [lb, ub), and
+// returns a std::vector object. T is one of { int, float, double }.
 template <typename T>
 std::vector<T> RangeSample(const T lb, const T ub, const int k) {
 
