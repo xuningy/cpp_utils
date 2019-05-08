@@ -70,6 +70,8 @@ void Sort(const VecContainer<T> &v, VecContainer<T> *v_sorted,
   std::sort(v_sorted->begin(), v_sorted->end());
 }
 
+// =========================== FIND OPERATIONS =============================
+
 // Find an element in the Container, and return it's position
 template <typename T,
           template <typename, typename = std::allocator<T>> class Container>
@@ -92,6 +94,35 @@ bool Find(const Container<T> &v, const T &elem) {
   return Find(v, elem, &index);
 }
 
+// Find the indices of all the elements that are equivalent to elem.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+Container<int> FindIndices(const Container<T> &v, const T &elem) {
+  Container<int> locations;
+    for (auto iter = v.begin(); iter != v.end(); ++iter) {
+      if (*iter == elem) {
+        locations.push_back(iter - v.begin());
+      }
+    }
+  return locations;
+}
+
+// Find the indices of all the elements that satisfies the predicate.
+template <typename T,
+          class UnaryPredicate,
+          template <typename, typename = std::allocator<T>> class Container>
+Container<int> Find(const Container<T> &v, UnaryPredicate* predicate) {
+  Container<int> locations;
+    for (auto iter = v.begin(); iter != v.end(); ++iter) {
+      if (predicate(*iter)) {
+        locations.push_back(iter - v.begin());
+      }
+    }
+  return locations;
+}
+
+// =========================== VALUE OPERATIONS  =============================
+
 // Find max element in a Container v, and return it's value and location.
 template <typename T,
           template <typename, typename = std::allocator<T>> class Container>
@@ -112,15 +143,6 @@ T Max(const Container<T> &v) {
   return Max(v, &location);
 }
 
-
-// Find min element in a Container v, and return it's value.
-template <typename T,
-          template <typename, typename = std::allocator<T>> class Container>
-T Min(const Container<T> &v) {
-  size_t location;
-  return Min(v, &location);
-}
-
 // Find min element in a Container v, and return it's value and location.
 template <typename T,
           template <typename, typename = std::allocator<T>> class Container>
@@ -131,6 +153,14 @@ T Min(const Container<T> &v, size_t *location) {
   Sort(v, &v_sorted, &idx_sorted);
   *location = idx_sorted.front();
   return v_sorted.front();
+}
+
+// Find min element in a Container v, and return it's value.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+T Min(const Container<T> &v) {
+  size_t location;
+  return Min(v, &location);
 }
 
 // Invert all the values in `vec` with type InContainer, wrt to the max value
@@ -174,6 +204,25 @@ void Normalize(const InContainer<T>& vec, OutContainer<T> *normalized_vec) {
   }
 
   return;
+}
+
+// =========================== REMOVE OPERATIONS =============================
+
+// Remove all instances of a value from a vector
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+void RemoveAll(Container<T>& vec, T val)
+{
+  vec.erase(std::remove(vec.begin(), vec.end(), val), vec.end());
+}
+
+// Remove all elements that meet the unary predicate's condition
+template <typename T,
+          class UnaryPredicate,
+          template <typename, typename = std::allocator<T>> class Container>
+void RemoveAllIf(Container<T>& vec, UnaryPredicate predicate)
+{
+    vec.erase(std::remove_if(vec.begin(), vec.end(), predicate), vec.end());
 }
 
 
