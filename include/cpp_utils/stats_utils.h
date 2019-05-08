@@ -44,7 +44,7 @@
 namespace stats_utils {
 
 // Define a sufficiently small value, but
-static constexpr float kSufficientlySmallFloat = 0.001;
+static constexpr float kSufficientlySmallFloat = 0.01;
 
 template <typename T> using VecXt = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template <typename T>
@@ -145,13 +145,13 @@ std::vector<int> UniformDiscreteSample(int N, int k) {
   return result;
 }
 
-// DiscreteSample draws k samples sampled at random according to distribution
-// `prob` with replacement, where `prob` is a probability array whose elements
-// sum to 1. T is one of { float, double }.
+// DiscreteSample draws k samples sampled at random according to
+// distribution `prob` with replacement, where `prob` is a probability array
+// whose elements sum to 1. T is one of { float, double }.
 template <typename T,
           template <typename, typename = std::allocator<T>> class Container>
-Container<int, std::allocator<int>> DiscreteSample(const Container<T> &prob,
-                                                   const int k) {
+Container<int, std::allocator<int>> DiscreteSample(
+  const Container<T> &prob, const int k) {
   size_t N = prob.size();
 
   // Check that the input arguments are valid.
@@ -167,12 +167,15 @@ Container<int, std::allocator<int>> DiscreteSample(const Container<T> &prob,
     prob_sum += p;
 
   // TODO@Xuning: instead of throwing an error, normalize the vector instead.
-  if (std::abs(prob_sum - 1.0) >= kSufficientlySmallFloat)
+  if (std::abs(prob_sum - 1.0) >= kSufficientlySmallFloat) {
+    std::cout << "Probability vector sum: " << prob_sum << std::endl;
     throw std::invalid_argument("[stats_utils::DiscreteSample] Probability vector does not add up to 1!");
+  }
+
 
   // Create index vector.
   Container<int, std::allocator<int>> idx;
-  for (size_t i = 0; i <= N; i += 1) {
+  for (size_t i = 0; i < N; i += 1) {
     idx.push_back(i);
   }
 
@@ -186,6 +189,67 @@ Container<int, std::allocator<int>> DiscreteSample(const Container<T> &prob,
   Container<int, std::allocator<int>> sampled_idx;
   for (int i = 0; i < k; i += 1) {
     sampled_idx.push_back(std::floor(distribution(generator)));
+  }
+  return sampled_idx;
+}
+
+// DiscreteSampleWithoutReplacement draws k samples sampled at random according to distribution
+// `prob` without replacement, where `prob` is a probability array whose
+// elements sum to 1. T is one of { float, double }.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
+  const Container<T> &prob, const int k) {
+  size_t N = prob.size();
+
+  // Check that the input arguments are valid.
+  if (N == 0)
+    throw std::invalid_argument("[stats_utils::DiscreteSampleWithoutReplacement] probability vector size needs to be larger than 1!");
+  if (k <= 0)
+    throw std::invalid_argument("[stats_utils::DiscreteSampleWithoutReplacement] Number to sample must be larger than 0!");
+
+  // Check that the sum of the probabilities is equal to 1 (accommodating
+  // rounding errors).
+  T prob_sum = 0;
+  for (const T &p : prob)
+    prob_sum += p;
+
+  // TODO@Xuning: instead of throwing an error, normalize the vector instead.
+  if (std::abs(prob_sum - 1.0) >= kSufficientlySmallFloat) {
+    std::cout << "Probability vector sum: " << prob_sum << std::endl;
+    throw std::invalid_argument("[stats_utils::DiscreteSampleWithoutReplacement] Probability vector does not add up to 1!");
+  }
+
+
+  // Create index vector.
+  Container<int, std::allocator<int>> idx;
+  for (size_t i = 0; i < N; i += 1) {
+    idx.push_back(i);
+  }
+
+  // Generate discrete distribution.
+  std::random_device rd;
+  std::mt19937 generator(rd());
+
+  Container<int, std::allocator<int>> sampled_idx;
+
+  // If the number of sampled elements is greater than the values themselves,
+  // just shuffle (uniformly random, not weighted) the index vector and return.
+  if (k >= N) {
+
+    sampled_idx = idx;
+    std::shuffle(sampled_idx.begin(), sampled_idx.end(), generator);
+    return sampled_idx;
+  }
+
+  // Sample according to the probabilities.
+  std::discrete_distribution<> distribution(prob.begin(), prob.end());
+
+  while (sampled_idx.size() < k) {
+    int value = distribution(generator);
+    if (std::find(sampled_idx.begin(), sampled_idx.end(), value) == sampled_idx.end()) {
+      sampled_idx.push_back(value);
+    }
   }
   return sampled_idx;
 }
