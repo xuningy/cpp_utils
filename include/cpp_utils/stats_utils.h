@@ -372,4 +372,34 @@ MatXt<T> Covariance(const MatXt<T> &samples, const VecXt<T> &mean,
   return cov;
 }
 
+// PercentileValue computes the value at the specified percentile.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+T PercentileValue(const Container<T> &v, float percentile) {
+
+  if (percentile < 0 || percentile > 1.0) {
+    throw std::invalid_argument("[stats_utils::PercentileValue] percentile needs to be between 0.0 and 1.0!");
+  }
+  Container<T, std::allocator<T>> v_sorted = v;
+  std::sort(v_sorted.begin(), v_sorted.end());
+
+  if (v.size() <= 2) {
+    std::cout << "[WARNING][stats_utils::PercentileValue] Vector too short. Returning the largest value." << std::endl;
+    return v_sorted.back();
+  }
+
+  // compute the index value
+  T R = percentile * (v_sorted.size() + 1);
+
+  // interpolate
+  unsigned int IR = std::max((int)std::floor(R), 1);
+  T FR = R - (int)std::floor(R);
+
+  size_t LB = IR - 1;
+  size_t UB = IR;
+
+  return v_sorted[LB] + (v_sorted[UB] - v_sorted[LB]) * FR;
+
+}
+
 } // namespace stats_utils
