@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cmath>
+#include <chrono>
 #include <limits>
 #include <random>
 #include <stdexcept>
@@ -52,12 +53,11 @@ using MatXt = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
 // RangeSample draws k samples of type T uniformly from the range [lb, ub), and
 // returns an Eigen::VectorXd object. T is one of { int, float, double }.
+
 template <typename T>
-VecXt<T> RangeSample(const T lb, const T ub, const int k) {
+VecXt<T> RangeSample(const T lb, const T ub, const int k, std::mt19937& generator) {
 
   // Generate uniform real distribution from lb to ub.
-  std::random_device rd;
-  std::mt19937 generator(rd());
   std::uniform_real_distribution<> distribution(lb, ub);
 
   // Sample from range.
@@ -68,14 +68,21 @@ VecXt<T> RangeSample(const T lb, const T ub, const int k) {
   return samples;
 };
 
+template <typename T>
+VecXt<T> RangeSample(const T lb, const T ub, const int k) {
+
+  auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  std::mt19937 generator(seed);
+  return RangeSample(lb, ub, k, generator);
+};
+
 // RangeSample draws k samples of type T uniformly from the range [lb, ub), and
 // returns a std::vector object. T is one of { int, float, double }.
+
 template <typename T>
-std::vector<T> RangeSample(const T lb, const T ub, const int k) {
+std::vector<T> RangeSample(const T lb, const T ub, const int k, std::mt19937& generator) {
 
   // Generate uniform real distribution from lb to ub.
-  std::random_device rd;
-  std::mt19937 generator(rd());
   std::uniform_real_distribution<> distribution(lb, ub);
 
   // Sample from range.
@@ -86,12 +93,13 @@ std::vector<T> RangeSample(const T lb, const T ub, const int k) {
   return samples;
 };
 
+
 // DataSample draws k samples sampled uniformly at random from Container
 // `data`, with replacement, and returns the sampled values in the same type
 // Container.
 template <typename T,
           template <typename, typename = std::allocator<T>> class Container>
-Container<T> DataSample(const Container<T> &data, const int k) {
+Container<T> DataSample(const Container<T> &data, const int k, std::mt19937& generator) {
   size_t N = data.size();
 
   // Check that the input arguments are valid.
@@ -101,8 +109,6 @@ Container<T> DataSample(const Container<T> &data, const int k) {
     throw std::invalid_argument("[stats_utils::DataSample] Number to sample must be larger than 0!");
 
   // Generate uniform integer distribution.
-  std::random_device rd;
-  std::mt19937 generator(rd());
   std::uniform_int_distribution<int> distribution(0, N - 1);
 
   // Sample from data.
@@ -114,16 +120,22 @@ Container<T> DataSample(const Container<T> &data, const int k) {
   return sampled_data;
 }
 
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+Container<T> DataSample(const Container<T> &data, const int k) {
+  auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  std::mt19937 generator(seed);
+  return DataSample(data, k, generator);
+}
+
 // UniformDiscreteSample draws k samples sampled from a discrete range from 0
 // to N, without replacement. Adapted from: https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement
 // Originally from Robert Floyd  http://www.nowherenearithaca.com/2013/05/robert-floyds-tiny-and-beautiful.html
-std::vector<int> UniformDiscreteSample(int N, int k) {
-  std::random_device rd;
-  std::mt19937 gen(rd());
+inline std::vector<int> UniformDiscreteSample(int N, int k, std::mt19937& generator) {
 
   std::unordered_set<int> elems;
   for (int r = N - k; r < N; ++r) {
-    int v = std::uniform_int_distribution<>(1, r)(gen);
+    int v = std::uniform_int_distribution<>(1, r)(generator);
 
     // there are two cases.
     // v is not in candidates ==> add it
@@ -141,8 +153,15 @@ std::vector<int> UniformDiscreteSample(int N, int k) {
   // so we have to shuffle it:
 
   std::vector<int> result(elems.begin(), elems.end());
-  std::shuffle(result.begin(), result.end(), gen);
+  std::shuffle(result.begin(), result.end(), generator);
   return result;
+}
+
+
+inline std::vector<int> UniformDiscreteSample(int N, int k) {
+  auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  std::mt19937 generator(seed);
+  return UniformDiscreteSample(N, k, generator);
 }
 
 // DiscreteSample draws k samples sampled at random according to
@@ -151,7 +170,7 @@ std::vector<int> UniformDiscreteSample(int N, int k) {
 template <typename T,
           template <typename, typename = std::allocator<T>> class Container>
 Container<int, std::allocator<int>> DiscreteSample(
-  const Container<T> &prob, const int k) {
+  const Container<T> &prob, const int k, std::mt19937& generator) {
   size_t N = prob.size();
 
   // Check that the input arguments are valid.
@@ -180,8 +199,6 @@ Container<int, std::allocator<int>> DiscreteSample(
   }
 
   // Generate piecewise constant distribution.
-  std::random_device rd;
-  std::mt19937 generator(rd());
   std::piecewise_constant_distribution<> distribution(idx.begin(), idx.end(),
                                                       prob.begin());
 
@@ -193,13 +210,24 @@ Container<int, std::allocator<int>> DiscreteSample(
   return sampled_idx;
 }
 
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+Container<int, std::allocator<int>> DiscreteSample(
+  const Container<T> &prob, const int k) {
+    auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    std::mt19937 generator(seed);
+
+    return DiscreteSample(prob, k, generator);
+  }
+
+
 // DiscreteSampleWithoutReplacement draws k samples sampled at random according to distribution
 // `prob` without replacement, where `prob` is a probability array whose
 // elements sum to 1. T is one of { float, double }.
 template <typename T,
           template <typename, typename = std::allocator<T>> class Container>
 Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
-  const Container<T> &prob, const int k) {
+  const Container<T> &prob, const int k, std::mt19937& generator) {
   size_t N = prob.size();
 
   // Check that the input arguments are valid.
@@ -228,9 +256,6 @@ Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
   }
 
   // Generate discrete distribution.
-  std::random_device rd;
-  std::mt19937 generator(rd());
-
   Container<int, std::allocator<int>> sampled_idx;
 
   // If the number of sampled elements is greater than the values themselves,
@@ -253,6 +278,17 @@ Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
   }
   return sampled_idx;
 }
+
+
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
+  const Container<T> &prob, const int k) {
+    auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    std::mt19937 generator(seed);
+
+    return DiscreteSampleWithoutReplacement(prob, k, generator);
+  }
 
 // GaussianPdf computes the probability density for a sample `x`, according to
 // mean `mean` and covariance `sigma`.
