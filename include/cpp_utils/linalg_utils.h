@@ -24,6 +24,13 @@
 #include <stdexcept>
 #include <vector>
 
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
+template <typename T> using VecXt = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+template <typename T>
+using MatXt = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+
 // Defines a collection of linear algebra utils.
 namespace linalg_utils {
 
@@ -50,5 +57,41 @@ std::vector<T> Linspace(const T lb, const T ub, const int N) {
   }
   return vec;
 }
+
+// Cumtrapz computes the approximate cumulative integral of Y via the
+// trapezoidal method with unit spacing. Analogous to MATLAB's cumtrapz.
+template <typename T>
+VecXt<T> Cumtrapz(T dx, const VecXt<T>& f)
+{
+
+  VecXt<T> y;
+  y.setZero(f.size(), 1);
+
+  y(0) = dx * f(0);
+  for (size_t i = 1; i < y.size(); ++i) {
+      y(i) = dx * f(i) + y(i-1);
+  }
+
+  return y;
+}
+
+// Cumtrapz computes the approximate cumulative integral of Y via the
+// trapezoidal method with unit spacing. Analogous to MATLAB's cumtrapz.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+Container<T> Cumtrapz(T dx, const Container<T>& f)
+{
+
+  Container<T> y;
+  y.resize(f.size(), 1);
+
+  y[0] = dx * f[0];
+  for (size_t i = 1; i < y.size(); ++i) {
+      y[i] = dx * f[i] + y[i-1];
+  }
+
+  return y;
+}
+
 
 } // namespace linalg_utils
