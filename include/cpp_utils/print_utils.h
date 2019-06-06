@@ -49,6 +49,19 @@ namespace print_utils {
     std::cout << std::endl;
   }
 
+  // Prints elements in a sequential container with indices, and its size.
+  template <typename T,
+            template <typename, typename = std::allocator<T>> class Container>
+  inline void printWithIndex(const Container<T> &vec, const std::string name = "") {
+    std::cout << name << " (" << vec.size() << "): ";
+    int i = 0;
+    for (const T &v : vec) {
+      std::cout <<"("<< i << ", "<< v << ") " ;
+      i++;
+    }
+    std::cout << std::endl;
+  }
+
   // Print an Eigen vector or matrix, and its size.
   template <typename Derived>
   inline void print(const Eigen::DenseBase<Derived> &mat, const std::string name = "") {
@@ -57,6 +70,23 @@ namespace print_utils {
 
     std::cout << name << " (" << mat.rows() << "x" << mat.cols() << "): ";
     if (mat.rows() == 1 || mat.cols() == 1) std::cout << mat.format(OctaveVecFmt) << std::endl;
+    else {
+      std::cout << std::endl;
+      std::cout << mat.format(OctaveFmt) << std::endl;
+    }
+  }
+
+  // Print an Eigen vector or matrix, and its size.
+  template <typename Derived>
+  inline void printWithIndex(const Eigen::DenseBase<Derived> &mat, const std::string name = "") {
+    Eigen::IOFormat OctaveFmt(4, 0, ", ", ";\n", "", "", "[", "]");
+
+    std::cout << name << " (" << mat.rows() << "x" << mat.cols() << "): ";
+    if (mat.rows() == 1 || mat.cols() == 1) {
+      for (size_t i = 0; i < mat.size(); i++) {
+        std::cout << "(" << i << ": " << mat(i) << ") ";
+      }
+    }
     else {
       std::cout << std::endl;
       std::cout << mat.format(OctaveFmt) << std::endl;
