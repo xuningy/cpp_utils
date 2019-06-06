@@ -1,22 +1,32 @@
-// Copyright 2018 Toyota Research Institute.  All rights reserved.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+/*
+stats_utils.h
+Copyright (C) 2019 Xuning Yang
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
 #pragma once
 
@@ -30,6 +40,8 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <cpp_utils/linalg_utils.h>
+
 // Defines a collection of statistics utility functions.
 //
 // Supported container types: Should be supported for all Sequence containers
@@ -42,6 +54,9 @@
 //
 // Certain functions support only Eigen types only; see signatures below.
 //
+
+namespace lu = linalg_utils;
+
 namespace stats_utils {
 
 // Define a sufficiently small value, but
@@ -50,245 +65,6 @@ static constexpr float kSufficientlySmallFloat = 0.01;
 template <typename T> using VecXt = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template <typename T>
 using MatXt = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-
-// RangeSample draws k samples of type T uniformly from the range [lb, ub), and
-// returns an Eigen::VectorXd object. T is one of { int, float, double }.
-
-template <typename T>
-VecXt<T> RangeSample(const T lb, const T ub, const int k, std::mt19937& generator) {
-
-  // Generate uniform real distribution from lb to ub.
-  std::uniform_real_distribution<> distribution(lb, ub);
-
-  // Sample from range.
-  auto samples = VecXt<T>(k);
-  for (int i = 0; i < k; i++) {
-    samples[i] = distribution(generator);
-  }
-  return samples;
-};
-
-template <typename T>
-VecXt<T> RangeSample(const T lb, const T ub, const int k) {
-
-  auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  std::mt19937 generator(seed);
-  return RangeSample(lb, ub, k, generator);
-};
-
-// RangeSample draws k samples of type T uniformly from the range [lb, ub), and
-// returns a std::vector object. T is one of { int, float, double }.
-
-template <typename T>
-std::vector<T> RangeSample(const T lb, const T ub, const int k, std::mt19937& generator) {
-
-  // Generate uniform real distribution from lb to ub.
-  std::uniform_real_distribution<> distribution(lb, ub);
-
-  // Sample from range.
-  std::vector<T> samples;
-  for (int i = 0; i < k; i++) {
-    samples.push_back(distribution(generator));
-  }
-  return samples;
-};
-
-
-// DataSample draws k samples sampled uniformly at random from Container
-// `data`, with replacement, and returns the sampled values in the same type
-// Container.
-template <typename T,
-          template <typename, typename = std::allocator<T>> class Container>
-Container<T> DataSample(const Container<T> &data, const int k, std::mt19937& generator) {
-  size_t N = data.size();
-
-  // Check that the input arguments are valid.
-  if (N == 0)
-    throw std::invalid_argument("[stats_utils::DataSample] probability vector size needs to be larger than 1!");
-  if (k <= 0)
-    throw std::invalid_argument("[stats_utils::DataSample] Number to sample must be larger than 0!");
-
-  // Generate uniform integer distribution.
-  std::uniform_int_distribution<int> distribution(0, N - 1);
-
-  // Sample from data.
-  Container<T> sampled_data;
-  for (int i = 0; i < k; i++) {
-    int j = distribution(generator);
-    sampled_data.push_back(data[j]);
-  }
-  return sampled_data;
-}
-
-template <typename T,
-          template <typename, typename = std::allocator<T>> class Container>
-Container<T> DataSample(const Container<T> &data, const int k) {
-  auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  std::mt19937 generator(seed);
-  return DataSample(data, k, generator);
-}
-
-// UniformDiscreteSample draws k samples sampled from a discrete range from 0
-// to N, without replacement. Adapted from: https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement
-// Originally from Robert Floyd  http://www.nowherenearithaca.com/2013/05/robert-floyds-tiny-and-beautiful.html
-inline std::vector<int> UniformDiscreteSample(int N, int k, std::mt19937& generator) {
-
-  std::unordered_set<int> elems;
-  for (int r = N - k; r < N; ++r) {
-    int v = std::uniform_int_distribution<>(1, r)(generator);
-
-    // there are two cases.
-    // v is not in candidates ==> add it
-    // v is in candidates ==> well, r is definitely not, because
-    // this is the first iteration in the loop that we could've
-    // picked something that big.
-
-    if (!elems.insert(v).second) {
-        elems.insert(r);
-    }
-  }
-
-  // ok, now we have a set of k elements. but now
-  // it's in a [unknown] deterministic order.
-  // so we have to shuffle it:
-
-  std::vector<int> result(elems.begin(), elems.end());
-  std::shuffle(result.begin(), result.end(), generator);
-  return result;
-}
-
-
-inline std::vector<int> UniformDiscreteSample(int N, int k) {
-  auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  std::mt19937 generator(seed);
-  return UniformDiscreteSample(N, k, generator);
-}
-
-// DiscreteSample draws k samples sampled at random according to
-// distribution `prob` with replacement, where `prob` is a probability array
-// whose elements sum to 1. T is one of { float, double }.
-template <typename T,
-          template <typename, typename = std::allocator<T>> class Container>
-Container<int, std::allocator<int>> DiscreteSample(
-  const Container<T> &prob, const int k, std::mt19937& generator) {
-  size_t N = prob.size();
-
-  // Check that the input arguments are valid.
-  if (N == 0)
-    throw std::invalid_argument("[stats_utils::DiscreteSample] probability vector size needs to be larger than 1!");
-  if (k <= 0)
-    throw std::invalid_argument("[stats_utils::DiscreteSample] Number to sample must be larger than 0!");
-
-  // Check that the sum of the probabilities is equal to 1 (accommodating
-  // rounding errors).
-  T prob_sum = 0;
-  for (const T &p : prob)
-    prob_sum += p;
-
-  // TODO@Xuning: instead of throwing an error, normalize the vector instead.
-  if (std::abs(prob_sum - 1.0) >= kSufficientlySmallFloat) {
-    std::cout << "Probability vector sum: " << prob_sum << std::endl;
-    throw std::invalid_argument("[stats_utils::DiscreteSample] Probability vector does not add up to 1!");
-  }
-
-
-  // Create index vector.
-  Container<int, std::allocator<int>> idx;
-  for (size_t i = 0; i < N; i += 1) {
-    idx.push_back(i);
-  }
-
-  // Generate piecewise constant distribution.
-  std::piecewise_constant_distribution<> distribution(idx.begin(), idx.end(),
-                                                      prob.begin());
-
-  // Sample according to the probabilities.
-  Container<int, std::allocator<int>> sampled_idx;
-  for (int i = 0; i < k; i += 1) {
-    sampled_idx.push_back(std::floor(distribution(generator)));
-  }
-  return sampled_idx;
-}
-
-template <typename T,
-          template <typename, typename = std::allocator<T>> class Container>
-Container<int, std::allocator<int>> DiscreteSample(
-  const Container<T> &prob, const int k) {
-    auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-    std::mt19937 generator(seed);
-
-    return DiscreteSample(prob, k, generator);
-  }
-
-
-// DiscreteSampleWithoutReplacement draws k samples sampled at random according to distribution
-// `prob` without replacement, where `prob` is a probability array whose
-// elements sum to 1. T is one of { float, double }.
-template <typename T,
-          template <typename, typename = std::allocator<T>> class Container>
-Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
-  const Container<T> &prob, const int k, std::mt19937& generator) {
-  size_t N = prob.size();
-
-  // Check that the input arguments are valid.
-  if (N == 0)
-    throw std::invalid_argument("[stats_utils::DiscreteSampleWithoutReplacement] probability vector size needs to be larger than 1!");
-  if (k <= 0)
-    throw std::invalid_argument("[stats_utils::DiscreteSampleWithoutReplacement] Number to sample must be larger than 0!");
-
-  // Check that the sum of the probabilities is equal to 1 (accommodating
-  // rounding errors).
-  T prob_sum = 0;
-  for (const T &p : prob)
-    prob_sum += p;
-
-  // TODO@Xuning: instead of throwing an error, normalize the vector instead.
-  if (std::abs(prob_sum - 1.0) >= kSufficientlySmallFloat) {
-    std::cout << "Probability vector sum: " << prob_sum << std::endl;
-    throw std::invalid_argument("[stats_utils::DiscreteSampleWithoutReplacement] Probability vector does not add up to 1!");
-  }
-
-
-  // Create index vector.
-  Container<int, std::allocator<int>> idx;
-  for (size_t i = 0; i < N; i += 1) {
-    idx.push_back(i);
-  }
-
-  // Generate discrete distribution.
-  Container<int, std::allocator<int>> sampled_idx;
-
-  // If the number of sampled elements is greater than the values themselves,
-  // just shuffle (uniformly random, not weighted) the index vector and return.
-  if (k >= N) {
-
-    sampled_idx = idx;
-    std::shuffle(sampled_idx.begin(), sampled_idx.end(), generator);
-    return sampled_idx;
-  }
-
-  // Sample according to the probabilities.
-  std::discrete_distribution<> distribution(prob.begin(), prob.end());
-
-  while (sampled_idx.size() < k) {
-    int value = distribution(generator);
-    if (std::find(sampled_idx.begin(), sampled_idx.end(), value) == sampled_idx.end()) {
-      sampled_idx.push_back(value);
-    }
-  }
-  return sampled_idx;
-}
-
-
-template <typename T,
-          template <typename, typename = std::allocator<T>> class Container>
-Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
-  const Container<T> &prob, const int k) {
-    auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-    std::mt19937 generator(seed);
-
-    return DiscreteSampleWithoutReplacement(prob, k, generator);
-  }
 
 // GaussianPdf computes the probability density for a sample `x`, according to
 // mean `mean` and covariance `sigma`.
@@ -339,7 +115,9 @@ template <typename T>
 MatXt<T> Covariance(const MatXt<T> &samples, const VecXt<T> &mean) {
   int N = samples.cols();
   int sample_dim = mean.size();
-  assert(samples.rows() == sample_dim);
+  if (samples.rows() != sample_dim) {
+    throw std::invalid_argument("[stats_utils::Covariance] sample data has size %d while mean has data size %d. Exiting.", samples.rows(), sample_dim);
+  }
 
   MatXt<T> centered = samples.colwise() - mean;
   MatXt<T> cov = (centered * centered.transpose()) / N;
@@ -400,6 +178,46 @@ T PercentileValue(const Container<T> &v, float percentile) {
 
   return v_sorted[LB] + (v_sorted[UB] - v_sorted[LB]) * FR;
 
+}
+
+// KolmogorovSmirnov performs the Kolmogorov-Smirnov test between two discrete distributions f & g. KS first computes the CDF for each, and then computes the maximum distance.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+T KolmogorovSmirnov(const Container<T>& f, const Container<T>& g) {
+  if (f.size() != g.size()) {
+    throw std::invalid_argument(std::string("[stats_utils::KolmogorovSmirnov] the discrete distributions f and g have different sizes: f.size() = %d, g.size() = %d", f.size(), g.size()));
+  }
+
+  size_t N = f.size();
+  T dx = 1 / (T)N;
+  Container<T> F = lu::Cumtrapz(dx, f);
+  Container<T> G = lu::Cumtrapz(dx, g);
+  T sumf = 0.0;
+  for (auto & elem : F) {
+    sumf += elem;
+  }
+
+  T sumg = 0.0;
+  for (auto & elem : G) {
+    sumg += elem;
+  }
+
+  if ( std::abs(sumf - 1.0) > 0.01 || std::abs(sumg - 1.0) > 0.01) {
+    throw std::invalid_argument("[stats_utils::KolmogorovSmirnov] f or g is an improper distribution!");
+  }
+
+  // Find the max vertical distance between the two values.
+  T max_dist = 0;
+  for (size_t i = 0; i < N; i++) {
+    T dist = std::abs(F[i] - G[i]);
+
+    std::cout << F[i] << " - " << G[i] << " = " << dist << std::endl;
+    if (dist > max_dist) {
+      max_dist = dist;
+    }
+  }
+
+  return max_dist;
 }
 
 } // namespace stats_utils
