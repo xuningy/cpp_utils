@@ -34,6 +34,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <numeric>
 #include <vector>
 
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
+template <typename T> using VecXt = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+template <typename T>
+using MatXt = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+
 // Defines a collection of vector utility functions.
 //
 // Supported container types: Should be supported for all Sequence containers
@@ -163,6 +170,28 @@ T Min(const Container<T> &v) {
   return Min(v, &location);
 }
 
+// Find min and max element in a Container v, and return it's values as a
+// std::tuple<T, T>{min, max}.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+std::tuple<T, T> MinMax(const Container<T> &v, std::tuple<T, T> *locations) {
+  Container<T, std::allocator<T>> v_sorted;
+  Container<size_t, std::allocator<size_t>> idx_sorted;
+
+  Sort(v, &v_sorted, &idx_sorted);
+  *locations = std::make_tuple(idx_sorted.front(), idx_sorted.back());
+  return std::make_tuple(v_sorted.front(), v_sorted.back());
+}
+
+// Find min and max element in a Container v, and return it's values as a
+// std::tuple<T, T>{min, max}.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+std::tuple<T, T> MinMax(const Container<T> &v) {
+  std::tuple<T, T> locations;
+  return MinMax(v, &locations);
+}
+
 // Invert all the values in `vec` with type InContainer, wrt to the max value
 // in `vec`; i.e. (max(vec) - vec). The inverted output is stored in
 // `inverted_vec`, with container type OutContainer.
@@ -180,9 +209,9 @@ void Invert(const InContainer<T>& vec, OutContainer<T> *inverted_vec) {
   return;
 }
 
-// Normalize all the values in `vec` with type InContainer, wrt to the max
-// value in `vec`; i.e. (vec/max(vec)). The inverted output is stored in
-// `inverted_vec`, with container type OutContainer.
+// Normalize all the values in `vec` with type InContainer, wrt to the total
+// value in `vec`; i.e. (vec/sum). The output is stored in `normalized_vec`,
+// with container type OutContainer.
 template <typename T,
           template <typename, typename = std::allocator<T>> class InContainer,
           template <typename, typename = std::allocator<T>> class OutContainer>
@@ -197,13 +226,48 @@ void Normalize(const InContainer<T>& vec, OutContainer<T> *normalized_vec) {
   } else if (sum == 0) {
     normalized_vec->assign(vec.size(), 1.0/vec.size());
   } else {
-    float factor = 1.0/sum; // doing a single division and then multiplication lowers the numerical instability associated with division.
+    T factor = 1.0/sum; // doing a single division and then multiplication lowers the numerical instability associated with division.
     for (const T &elem : vec) {
       normalized_vec->push_back(elem * factor);
     }
   }
 
   return;
+}
+
+// RescaleMinMax rescales all the values in `vec` with type InContainer wrt min
+// max value in `vec` such that all values are bounded between 0 and 1. The
+// output is stored in `rescaled_vec`, with container type OutContainer.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class InContainer,
+          template <typename, typename = std::allocator<T>> class OutContainer>
+void RescaleMinMax(const InContainer<T>& vec, OutContainer<T> *rescaled_vec) {
+  std::tuple<T, T> minmax = MinMax(vec);
+  T min = std::get<0>(minmax);
+  T max = std::get<1>(minmax);
+
+  rescaled_vec->clear();
+  if ((min == 0 && max == 1) || min == max) {
+    *rescaled_vec = vec;
+  } else {
+    T factor = 1.0/(max - min); // doing a single division and then multiplication lowers the numerical instability associated with division.
+    for (const T &elem : vec) {
+      rescaled_vec->push_back((elem - min) * factor);
+    }
+  }
+
+  return;
+}
+
+// RescaleMinMax rescales all the values in `v`
+template <typename T>
+VecXt<T> RescaleMinMax(const VecXt<T>& v) {
+  T min = v.minCoeff();
+  T max = v.maxCoeff();
+
+  if ((min == 0 && max == 1) || max == min) return v;
+
+  return (v.array() - VecXt<T>::Constant(v.size(), 1, min).array() ) / (max - min);
 }
 
 // =========================== REMOVE OPERATIONS =============================
