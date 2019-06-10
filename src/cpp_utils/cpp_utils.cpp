@@ -1,5 +1,34 @@
 #include "cpp_utils/cpp_utils.h"
 #include <experimental/filesystem>
+#include <random>
+
+std::random_device rd_;
+std::mt19937 gen_(rd_());
+
+std::string cpp_utils::methodName(const std::string &prettyFunction,
+                                  const std::string &file,
+                                  const int &line)
+{
+  /**
+    Purpose:  This function takes as input the "__PRETTY_FUNCTION__" macro
+              from where its called and outputs the "class_name::function_name"
+
+  */
+  size_t begin, end;
+  end = prettyFunction.find("(");
+  begin = prettyFunction.substr(0, end).rfind(" ") + 1;
+  end -= begin;
+
+  std::string ret = "File: ";
+  ret.append(file);
+  ret.append("\n Function: ");
+  ret.append(prettyFunction.substr(begin, end));
+  ret.append("\n Line No: ");
+  ret.append(std::to_string(line));
+  // std::string ret = prettyFunction.substr(begin, end);
+
+  return ret;
+}
 
 std::string cpp_utils::methodName(const std::string &prettyFunction)
 {
@@ -56,4 +85,11 @@ std::vector<std::string> cpp_utils::get_files_in_directory(
   }
 
   return files;
+}
+
+int cpp_utils::select_random_element(const std::vector<int> &el)
+{
+  std::uniform_int_distribution<> dis(0, (int)el.size() - 1);
+  int index = dis(gen_);
+  return el[index];
 }
