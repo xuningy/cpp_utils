@@ -19,11 +19,14 @@ std::string cpp_utils::methodName(const std::string &prettyFunction,
   begin = prettyFunction.substr(0, end).rfind(" ") + 1;
   end -= begin;
 
+  size_t f_begin, f_end;
+  f_end = file.size();
+  f_begin = file.substr(0, file.size()).find_last_of("/") + 1;
   std::string ret = "File: ";
-  ret.append(file);
-  ret.append("\n Function: ");
+  ret.append(file.substr(f_begin, f_end));
+  ret.append("\t Function: ");
   ret.append(prettyFunction.substr(begin, end));
-  ret.append("\n Line No: ");
+  ret.append("\t Line No: ");
   ret.append(std::to_string(line));
   // std::string ret = prettyFunction.substr(begin, end);
 
