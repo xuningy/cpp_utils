@@ -142,7 +142,7 @@ int cpp_utils::select_random_element(const std::vector<int> &el)
 {
   std::uniform_int_distribution<> dis(0, (int)el.size() - 1);
   int index = dis(gen_);
-  return index;
+  return el[index];
 }
 
 int cpp_utils::get_random_number(const int min, const int max)
