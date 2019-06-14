@@ -14,6 +14,7 @@ std::string methodName(const std::string &prettyFunction);
 template <typename T>
 std::vector<T> arange(T start, T stop, T step = 1);
 int select_random_element(const std::vector<int> &elements);
+int get_random_number(const int min, const int max);
 std::vector<std::string> get_files_in_directory(const std::string &directory,
                                                 const std::string &ext);
 template <typename D>
