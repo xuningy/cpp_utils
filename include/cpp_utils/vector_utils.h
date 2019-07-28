@@ -146,8 +146,7 @@ T Max(const Container<T> &v, size_t *location) {
 template <typename T,
           template <typename, typename = std::allocator<T>> class Container>
 T Max(const Container<T> &v) {
-  size_t location;
-  return Max(v, &location);
+  return *std::max_element(v.begin(), v.end());
 }
 
 // Find min element in a Container v, and return it's value and location.
@@ -166,8 +165,7 @@ T Min(const Container<T> &v, size_t *location) {
 template <typename T,
           template <typename, typename = std::allocator<T>> class Container>
 T Min(const Container<T> &v) {
-  size_t location;
-  return Min(v, &location);
+  return *std::min_element(v.begin(), v.end());
 }
 
 // Find min and max element in a Container v, and return it's values as a
