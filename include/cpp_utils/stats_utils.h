@@ -95,6 +95,25 @@ T GaussianPdf(const VecXt<T> &x, const VecXt<T> &mean, const MatXt<T> &sigma) {
   return std::exp(-n * log_sqrt_2pi - 0.5 * dist) / L.determinant();
 }
 
+// WeightedMean computes the weighted mean of samples of size MxN according to
+// weights of size N, and outputs a vector mean of size M.
+template <typename T> VecXt<T> WeightedMean(const MatXt<T> &samples, const VecXt<T> &weights)
+{
+  int N = samples.cols();
+  if (N != weights.size())
+    throw std::invalid_argument(std::string("[stats_utils::WeightedMean] number of samples and number of weights are not the same: %d vs. %d!", N, weights.size()));
+
+  T weights_sum = weights.sum();
+
+  // Compute the weighted samples.
+  MatXt<T> weighted_samples = samples.array().rowwise() * weights.transpose().array();
+
+  // Compute the mean.
+  VecXt<T> weighted_mean = 1.0 / weights_sum * weighted_samples.rowwise().sum();
+
+  return weighted_mean;
+}
+
 // Covariance computes the sample covariance for an Eigen Matrix `samples` of
 // size MxN, and outputs an Eigen matrix of size MxM.
 // `samples` contains N samples of size M.
@@ -128,11 +147,11 @@ MatXt<T> Covariance(const MatXt<T> &samples, const VecXt<T> &mean) {
   return cov;
 }
 
-// Covariance computes the weighted covariance for an Eigen Matrix `samples` of
+// WeightedCovariance computes the weighted covariance for an Eigen Matrix `samples` of
 // size MxN according to the mean `mean`, and outputs an Eigen matrix of size
 // MxM. `samples` contains N samples of size M.
 template <typename T>
-MatXt<T> Covariance(const MatXt<T> &samples, const VecXt<T> &mean,
+MatXt<T> WeightedCovariance(const MatXt<T> &samples, const VecXt<T> &mean,
                     const VecXt<T> &weights) {
 
   int N = samples.cols();
