@@ -114,9 +114,9 @@ Container<T> DataSample(const Container<T> &data, const int k, std::mt19937& gen
 
   // Check that the input arguments are valid.
   if (N == 0)
-    throw std::invalid_argument("[stats_utils::DataSample] probability vector size needs to be larger than 1!");
+    throw std::invalid_argument("[sample_utils::DataSample] probability vector size needs to be larger than 1!");
   if (k <= 0)
-    throw std::invalid_argument("[stats_utils::DataSample] Number to sample must be larger than 0!");
+    throw std::invalid_argument("[sample_utils::DataSample] Number to sample must be larger than 0!");
 
   // Generate uniform integer distribution.
   std::uniform_int_distribution<int> distribution(0, N - 1);
@@ -185,9 +185,9 @@ Container<int, std::allocator<int>> DiscreteSample(
 
   // Check that the input arguments are valid.
   if (N == 0)
-    throw std::invalid_argument("[stats_utils::DiscreteSample] probability vector size needs to be larger than 1!");
+    throw std::invalid_argument("[sample_utils::DiscreteSample] probability vector size needs to be larger than 1!");
   if (k <= 0)
-    throw std::invalid_argument("[stats_utils::DiscreteSample] Number to sample must be larger than 0!");
+    throw std::invalid_argument("[sample_utils::DiscreteSample] Number to sample must be larger than 0!");
 
   // Check that the sum of the probabilities is equal to 1 (accommodating
   // rounding errors).
@@ -198,7 +198,7 @@ Container<int, std::allocator<int>> DiscreteSample(
   // TODO@Xuning: instead of throwing an error, normalize the vector instead.
   if (std::abs(prob_sum - 1.0) >= kSufficientlySmallFloat) {
     std::cout << "Probability vector sum: " << prob_sum << std::endl;
-    throw std::invalid_argument("[stats_utils::DiscreteSample] Probability vector does not add up to 1!");
+    throw std::invalid_argument("[sample_utils::DiscreteSample] Probability vector does not add up to 1!");
   }
 
 
@@ -242,9 +242,9 @@ Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
 
   // Check that the input arguments are valid.
   if (N == 0)
-    throw std::invalid_argument("[stats_utils::DiscreteSampleWithoutReplacement] probability vector size needs to be larger than 1!");
+    throw std::invalid_argument("[sample_utils::DiscreteSampleWithoutReplacement] probability vector size needs to be larger than 1!");
   if (k <= 0)
-    throw std::invalid_argument("[stats_utils::DiscreteSampleWithoutReplacement] Number to sample must be larger than 0!");
+    throw std::invalid_argument("[sample_utils::DiscreteSampleWithoutReplacement] Number to sample must be larger than 0!");
 
   // Check that the sum of the probabilities is equal to 1 (accommodating
   // rounding errors).
@@ -255,7 +255,7 @@ Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
   // TODO@Xuning: instead of throwing an error, normalize the vector instead.
   if (std::abs(prob_sum - 1.0) >= kSufficientlySmallFloat) {
     std::cout << "Probability vector sum: " << prob_sum << std::endl;
-    throw std::invalid_argument("[stats_utils::DiscreteSampleWithoutReplacement] Probability vector does not add up to 1!");
+    throw std::invalid_argument("[sample_utils::DiscreteSampleWithoutReplacement] Probability vector does not add up to 1!");
   }
 
 
