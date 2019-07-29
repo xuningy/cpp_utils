@@ -95,6 +95,21 @@ T GaussianPdf(const VecXt<T> &x, const VecXt<T> &mean, const MatXt<T> &sigma) {
   return std::exp(-n * log_sqrt_2pi - 0.5 * dist) / L.determinant();
 }
 
+// Average computes the average and stddev of the vector.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+T Average(const Container<T>& v, T *stddev) {
+  T sum = std::accumulate(v.begin(), v.end(), 0.0);
+  T mean = sum / v.size();
+
+  Container<T> diff(v.size());
+  std::transform(v.begin(), v.end(), diff.begin(), [mean](double x) { return x - mean; });
+  T sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+  *stddev = std::sqrt(sq_sum / v.size());
+
+  return mean;
+}
+
 // WeightedMean computes the weighted mean of samples of size MxN according to
 // weights of size N, and outputs a vector mean of size M.
 template <typename T> VecXt<T> WeightedMean(const MatXt<T> &samples, const VecXt<T> &weights)
