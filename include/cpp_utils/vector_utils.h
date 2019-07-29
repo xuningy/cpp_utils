@@ -284,7 +284,88 @@ template <typename T,
           template <typename, typename = std::allocator<T>> class Container>
 void RemoveAllIf(Container<T>& vec, UnaryPredicate predicate)
 {
-    vec.erase(std::remove_if(vec.begin(), vec.end(), predicate), vec.end());
+  vec.erase(std::remove_if(vec.begin(), vec.end(), predicate), vec.end());
+}
+
+// Remove one index from a vector
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+void RemoveAtIndex(Container<T>& vec, int index)
+{
+  vec.erase(vec.begin() + index);
+}
+
+// Remove a list of indices from a vector by copying data to a new vector in blocks.
+template <typename T,
+          template <typename, typename = std::allocator<int>> class Container>
+std::vector<T> RemoveAtIndices(const std::vector<T>& v1, Container<int>& indices)
+{
+  // if indices empty, do nothing.
+  if (indices.empty()) return v1;
+
+  // Create a new vector
+  std::vector<T> v2;
+  v2.reserve(v1.size() - indices.size());
+
+  // Sort indices.
+  std::sort(indices.begin(), indices.end());
+
+  // Copy blocks over at once.
+  typename std::vector<T>::const_iterator itBlockBegin = v1.begin();
+  for (typename Container<int>::const_iterator it = indices.begin(); it != indices.end(); ++it)
+  {
+    typename std::vector<T>::const_iterator itBlockEnd = v1.begin() + *it;
+    if (itBlockBegin != itBlockEnd)
+    {
+      std::copy(itBlockBegin, itBlockEnd, std::back_inserter(v2));
+    }
+    itBlockBegin = itBlockEnd + 1;
+  }
+
+  // Copy last block.
+  if(itBlockBegin != v1.end())
+  {
+    std::copy(itBlockBegin, v1.end(), std::back_inserter(v2));
+  }
+
+  return v2;
+}
+
+// Remove a list of indices from a deque by iterating over the deque.
+template <typename T,
+          template <typename, typename = std::allocator<int>> class Container>
+void RemoveAtIndices(std::deque<T>& v, Container<int>& indices)
+{
+  // If indices empty, do nothing.
+  if (indices.empty()) return;
+
+  // If only one index, directly remove it.
+  if (indices.size() == 1)
+  {
+    RemoveAtIndex(v, indices[0]);
+    return;
+  }
+
+  // Sort indices.
+  std::sort(indices.begin(), indices.end());
+
+  int i = 0;
+  int index = indices[i];
+
+  //  Iterate over deque and remove the appropriate elements.
+  for (typename std::deque<T>::const_iterator it = v.begin(); it != v.end(); ) {
+    if ( (it - v.begin() - i) == index) {
+      it = v.erase(it); // returns the next iterator
+
+      // update the next index to find.
+      i++;
+      index = indices[i];
+    } else {
+      ++it; // increment the iterator
+    }
+  }
+
+  return;
 }
 
 
