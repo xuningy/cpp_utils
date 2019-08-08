@@ -65,7 +65,7 @@ using MatXt = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 // returns an Eigen::VectorXd object. T is one of { int, float, double }.
 
 template <typename T>
-VecXt<T> RangeSample(const T lb, const T ub, const int k, std::mt19937& generator) {
+VecXt<T> RangeSampleEigen(const T lb, const T ub, const int k, std::mt19937& generator) {
 
   // Generate uniform real distribution from lb to ub.
   std::uniform_real_distribution<> distribution(lb, ub);
@@ -79,7 +79,7 @@ VecXt<T> RangeSample(const T lb, const T ub, const int k, std::mt19937& generato
 };
 
 template <typename T>
-VecXt<T> RangeSample(const T lb, const T ub, const int k) {
+VecXt<T> RangeSampleEigen(const T lb, const T ub, const int k) {
 
   auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
   std::mt19937 generator(seed);
