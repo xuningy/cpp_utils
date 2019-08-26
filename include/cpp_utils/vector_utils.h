@@ -359,6 +359,7 @@ void RemoveAtIndices(std::deque<T>& v, Container<int>& indices)
 
       // update the next index to find.
       i++;
+      if (i >= indices.size()) break;
       index = indices[i];
     } else {
       ++it; // increment the iterator
