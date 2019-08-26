@@ -261,7 +261,7 @@ Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
 
   // Create index vector.
   Container<int, std::allocator<int>> idx;
-  for (size_t i = 0; i < N; i += 1) {
+  for (size_t i = 0; i < N; i++) {
     idx.push_back(i);
   }
 
