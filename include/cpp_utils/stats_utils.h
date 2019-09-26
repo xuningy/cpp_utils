@@ -99,6 +99,13 @@ T GaussianPdf(const VecXt<T> &x, const VecXt<T> &mean, const MatXt<T> &sigma) {
 template <typename T,
           template <typename, typename = std::allocator<T>> class Container>
 T Average(const Container<T>& v, T *stddev) {
+  if (v.empty())
+  {
+    std::cout << "[stats_utils::Average] WARNING: container has no elements; returning NaN." << std::endl;
+    *stddev = std::numeric_limits<T>::quiet_NaN();
+    return std::numeric_limits<T>::quiet_NaN();
+  }
+
   T sum = std::accumulate(v.begin(), v.end(), 0.0);
   T mean = sum / v.size();
 

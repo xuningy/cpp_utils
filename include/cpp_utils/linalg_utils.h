@@ -41,13 +41,13 @@ std::vector<T> Linspace(const T lb, const T ub, const int N) {
     std::vector<T> vec;
     vec.push_back(lb);
     return vec;
+  } else if (N <= 1)
+  {
+    std::cout << "N: " << N << " upper bound: " << ub << " lower bound: " << lb << std::endl;
+    throw std::invalid_argument("[linalg_utils::Linspace] Number of discretization must be greater than 1 for unequal lower and upper bounds!");
   }
-
-  // Check that the input arguments are valid.
-  if (N == 0)
-    throw std::invalid_argument("[linalg_utils::Linspace] probability vector size needs to be larger than 1!");
   if (lb >= ub)
-    throw std::invalid_argument("[linalg_utils::Linspace] Number to sample must be larger than 0!");
+    throw std::invalid_argument("[linalg_utils::Linspace] lower bound must be larger (or equal to) higher bound!");
 
   // Generate the evenly spaced vector.
   T h = (ub - lb) / static_cast<T>(N - 1);
@@ -55,6 +55,28 @@ std::vector<T> Linspace(const T lb, const T ub, const int N) {
   for (int n = 0; n < N; n++) {
     vec.push_back(lb + n*h);
   }
+  return vec;
+}
+
+// Generates a linearly spaced vector between `lb` and `ub` with spacing of `h`, inclusive.
+template <typename T>
+std::vector<T> Arange(const T lb, const T ub, const float h, bool endpoint = true)
+{
+  if (ub - lb < h)
+    throw std::invalid_argument("[linalg_utils::Arange] discretization is larger than the provided range");
+
+  std::vector<T> vec;
+
+  // Do this instead of adding to avoid rounding errors
+  int N = std::round((ub - lb) / h);
+
+  // Add the last value if desired, only if it is not already added by the loop. Should return N+1 if this is enabled.
+  if (endpoint) N+=1;
+
+  for (int n = 0; n < N; n++) {
+    vec.push_back(lb + n*h);
+  }
+
   return vec;
 }
 
@@ -93,5 +115,40 @@ Container<T> Cumtrapz(T dx, const Container<T>& f)
   return y;
 }
 
+// Normalizes a heading that is between 0 and 2 pi
+// into a heading that is between -pi and pi.
+template<typename T>
+T NormalizeHeading(T a)
+{
+  while (a > M_PI) {
+    a -= 2 * M_PI;
+  }
+
+  while (a < -M_PI) {
+    a += 2 * M_PI;
+  }
+
+  return a;
+}
+
+// Computes the radian difference in heading
+// (a - b). The result will be between -pi and pi.
+// Pre conditions: a and b are both between -pi and pi.
+template<typename T>
+T HeadingDifference(T a, T b)
+{
+  T diff = a - b;
+
+  if (diff > M_PI)
+  {
+    return diff - 2 * M_PI;
+  }
+  else if (diff < -M_PI)
+  {
+    return diff + 2 * M_PI;
+  }
+
+  return diff;
+}
 
 } // namespace linalg_utils
