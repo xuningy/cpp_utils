@@ -65,14 +65,14 @@ namespace print_utils {
   // Print an Eigen vector or matrix, and its size.
   template <typename Derived>
   inline void print(const Eigen::DenseBase<Derived> &mat, const std::string name = "") {
-    Eigen::IOFormat OctaveFmt(4, 0, ", ", ";\n", "", "", "[", "]");
+    Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Eigen::IOFormat OctaveVecFmt(4, 0, ", ", " ", "", "", "[", "]");
 
     std::cout << name << " (" << mat.rows() << "x" << mat.cols() << "): ";
     if (mat.rows() == 1 || mat.cols() == 1) std::cout << mat.format(OctaveVecFmt) << std::endl;
     else {
       std::cout << std::endl;
-      std::cout << mat.format(OctaveFmt) << std::endl;
+      std::cout << mat.format(CleanFmt) << std::endl;
     }
   }
 

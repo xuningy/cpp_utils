@@ -114,9 +114,9 @@ Container<T> DataSample(const Container<T> &data, const int k, std::mt19937& gen
 
   // Check that the input arguments are valid.
   if (N == 0)
-    throw std::invalid_argument("[sample_utils::DataSample] probability vector size needs to be larger than 1!");
+    throw std::invalid_argument("[sample_utils::DataSample] Probability vector is empty!");
   if (k <= 0)
-    throw std::invalid_argument("[sample_utils::DataSample] Number to sample must be larger than 0!");
+    throw std::invalid_argument("[sample_utils::DataSample] Number to sample < 0!");
 
   // Generate uniform integer distribution.
   std::uniform_int_distribution<int> distribution(0, N - 1);
