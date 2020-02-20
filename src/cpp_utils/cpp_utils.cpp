@@ -141,6 +141,14 @@ int cpp_utils::select_random_element(const std::vector<int> &el) {
   return el[index];
 }
 
+int cpp_utils::select_random_element(const std::vector<int> &el,
+                                     const std::vector<int> &weights) {
+  std::discrete_distribution<int> weighted_sample(weights.begin(),
+                                                  weights.end());
+  int number = weighted_sample(gen_);
+  return number;
+}
+
 int cpp_utils::select_random_index(const std::vector<std::pair<int, int>> &el) {
   std::uniform_int_distribution<> dis(0, (int)el.size() - 1);
   int index = dis(gen_);

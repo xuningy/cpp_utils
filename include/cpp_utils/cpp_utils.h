@@ -13,6 +13,8 @@ std::string methodName(const std::string &prettyFunction);
 template <typename T>
 std::vector<T> arange(T start, T stop, T step = 1);
 int select_random_element(const std::vector<int> &elements);
+int select_random_element(const std::vector<int> &elements,
+                          const std::vector<int> &weights);
 int select_random_index(const std::vector<std::pair<int, int>> &elements);
 
 int get_random_number(const int min, const int max);
