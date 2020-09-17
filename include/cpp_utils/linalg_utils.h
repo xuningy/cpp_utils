@@ -60,7 +60,7 @@ std::vector<T> Linspace(const T lb, const T ub, const int N) {
 
 // Generates a linearly spaced vector between `lb` and `ub` with spacing of `h`, inclusive.
 template <typename T>
-std::vector<T> Arange(const T lb, const T ub, const float h, bool endpoint = true)
+std::vector<T> Arange(const T lb, const T ub, const float h = 1.0, bool endpoint = true)
 {
   if (ub - lb < h)
     throw std::invalid_argument("[linalg_utils::Arange] discretization is larger than the provided range");
@@ -75,6 +75,63 @@ std::vector<T> Arange(const T lb, const T ub, const float h, bool endpoint = tru
 
   for (int n = 0; n < N; n++) {
     vec.push_back(lb + n*h);
+  }
+
+  return vec;
+}
+
+// Generates a linearly spaced vector between `lb` and `ub` with spacing of `h`, inclusive. If ub < lb, returns an empty vector. Else, returns.
+inline Eigen::VectorXd ArangeEigenUnsigned(const double lb, const double ub, const double h = 1.0, bool endpoint = true)
+{
+  if (ub - lb < h)
+    throw std::invalid_argument("[linalg_utils::Arange] discretization is larger than the provided range");
+  if (ub < lb) {
+    Eigen::VectorXd vec(0);
+    return vec;
+  }
+  if (ub == lb) {
+    Eigen::VectorXd vec(1);
+    vec(0) = ub;
+    return vec;
+  }
+
+  // Do this instead of adding to avoid rounding errors
+  int N = std::round((ub - lb) / h);
+
+
+  // Add the last value if desired, only if it is not already added by the loop. Should return N+1 if this is enabled.
+  if (endpoint) N+=1;
+
+  Eigen::VectorXd vec(N);
+  for (int n = 0; n < N; n++) {
+    vec(n) = (lb + n*h);
+  }
+
+  return vec;
+}
+
+inline Eigen::VectorXi ArangeEigenUnsigned(const int lb, const int ub, const int h = 1, bool endpoint = true)
+{
+  if (ub < lb) {
+    Eigen::VectorXi vec(0);
+    return vec;
+  }
+  if (ub == lb) {
+    Eigen::VectorXi vec(1);
+    vec(0) = ub;
+    return vec;
+  }
+
+  // Do this instead of adding to avoid rounding errors
+  int N = std::round((ub - lb) / h);
+
+
+  // Add the last value if desired, only if it is not already added by the loop. Should return N+1 if this is enabled.
+  if (endpoint) N+=1;
+
+  Eigen::VectorXi vec(N);
+  for (int n = 0; n < N; n++) {
+    vec(n) = (std::round(lb + n*h));
   }
 
   return vec;
@@ -149,6 +206,42 @@ T HeadingDifference(T a, T b)
   }
 
   return diff;
+}
+
+// Closest point on a line:
+// project vector AP onto vector AB, then add the resulting vector to point A
+// A + dot(AP,AB) / dot(AB,AB) * AB
+inline Eigen::Vector3d ClosestPointOnALine(const Eigen::Vector3d& origin, const Eigen::Vector3d& point, const Eigen::Vector3d& line_endpoint)
+{
+  Eigen::Vector3d vector = point - origin;
+  Eigen::Vector3d line = line_endpoint - origin;
+  double scale = vector.dot(line)/line.dot(line);
+  return origin + line * scale;
+}
+
+// Differencing matrix:
+// M = [ 1, 0, 0, ...
+//      -1, 1, 0, ...
+//      0, -1, 1, ...
+//      ...      -1, 1 ]
+// M is N x N
+inline Eigen::MatrixXd differencingMatrix(int N)
+{
+  if (N == 0)
+    throw std::invalid_argument("[linalg_utils::differencingMatrix] Size of specified matrix N is zero! N needs to be at least 1.");
+
+  Eigen::MatrixXd M(N, N);
+  M.setZero(N, N);
+
+  for (int i = 0; i < N-1; i++)
+  {
+    M(i+1, i) = -1;
+    M(i+1, i+1) = 1;
+  }
+  M(0, 0) = 1;
+  M(N, N-1) = -1;
+
+  return M;
 }
 
 } // namespace linalg_utils
