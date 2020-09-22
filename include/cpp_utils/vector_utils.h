@@ -370,5 +370,13 @@ void RemoveAtIndices(std::deque<T>& v, Container<int>& indices)
   return;
 }
 
+// Return a slice from position m to n inclusive. Credit: https://www.techiedelight.com/get-slice-sub-vector-from-vector-cpp/
+template<typename T>
+std::vector<T> Slice(std::vector<T> &v, int m, int n)
+{
+  std::vector<T>vec(n-m+1);
+  std::copy(v.begin() + m, v.begin() + n + 1, vec.begin());
+  return vec;
+}
 
 } // namespace vector_utils
