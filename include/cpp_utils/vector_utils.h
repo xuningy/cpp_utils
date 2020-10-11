@@ -67,15 +67,25 @@ void Sort(const VecContainer<T> &v, VecContainer<T> *v_sorted,
   // Initialize original index locations.
   IdxContainer<size_t> idx(v.size());
   std::iota(idx.begin(), idx.end(), 0);
-
   // Sort indexes based on comparing values in v.
   std::sort(idx.begin(), idx.end(),
             [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
-
   // Populate the output parameters.
   *idx_sorted = idx;
   *v_sorted = v;
   std::sort(v_sorted->begin(), v_sorted->end());
+}
+
+template <typename T,
+          template <typename, typename = std::allocator<T>> class VecContainer,
+          template <typename, typename = std::allocator<float>> class ArgContainer>
+void ArgSort(const VecContainer<T> &v, VecContainer<T> *v_sorted, const ArgContainer<float> &varg, ArgContainer<float> *varg_sorted) {
+  std::vector<size_t> args_sorted_idx;
+  Sort<float>(varg, varg_sorted, &args_sorted_idx);
+  // Push escape points by sorted cost
+  for(uint i = 0; i < v.size(); i++) {
+    v_sorted->push_back(v[args_sorted_idx[i]]);
+  }
 }
 
 // =========================== FIND OPERATIONS =============================
