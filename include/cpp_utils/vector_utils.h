@@ -129,6 +129,18 @@ Container<int> Find(const Container<T> &v, UnaryPredicate* predicate) {
   return locations;
 }
 
+// Find the indices of floats/doubles.
+template <typename T,
+          template <typename, typename = std::allocator<T>> class Container>
+int FindIf(const Container<T> &v, T val) {
+  auto it = std::find_if(v.begin(), v.end(),
+    [val](T elem) { return elem <= val+0.00000001
+                      && elem >= val-0.00000001; });
+
+  int idx = it - v.begin();
+  return idx;
+}
+
 // =========================== VALUE OPERATIONS  =============================
 
 // Find max element in a Container v, and return it's value and location.

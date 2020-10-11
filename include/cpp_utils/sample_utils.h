@@ -40,6 +40,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <cpp_utils/vector_utils.h>
+
 // Defines a collection of sample utility functions.
 //
 // Supported container types: Should be supported for all Sequence containers
@@ -278,13 +280,55 @@ Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
   }
 
   // Sample according to the probabilities.
+
+
+  // if there is a 1 in the distribution, then the sampling wont work.
+  auto idx_iter = std::find(prob.begin(), prob.end(), 1.0);
+  // int index = vector_utils::FindIf(prob, (float)1.0);
+  // std::cout << "findIf: " << index << " find: " << idx_iter - prob.begin();
+  if ( idx_iter != prob.end())
+  {
+
+    std::cout << "Found a 1 in the distribution at position: " << idx_iter - prob.begin() << "/" << prob.end() - prob.begin() << std::flush;
+    std::cout << " prob " << std::endl;
+    for (auto each : prob)
+      std::cout << each << ", ";
+    std::cout << std::endl;
+
+    int idx = idx_iter - prob.begin();
+    sampled_idx.push_back(idx);
+    return sampled_idx;
+  }
+
+
+  // otherwise, sample through the distribution
   std::discrete_distribution<> distribution(prob.begin(), prob.end());
 
-  while (sampled_idx.size() < k) {
+  int iter = 0;
+  while (sampled_idx.size() < k && iter < N) {
     int value = distribution(generator);
+    // std::cout << "sampled " << value << std::endl;
     if (std::find(sampled_idx.begin(), sampled_idx.end(), value) == sampled_idx.end()) {
       sampled_idx.push_back(value);
+      std::cout << "current sampled_idx contains: " << std::flush;
+      for (auto each : sampled_idx)
+        std::cout << each << ", ";
+      std::cout << std::endl;
     }
+    iter++;
+  }
+
+  if (iter == N)
+  {
+    std::cout << "terminated early, the probability vector looks like " << std::flush;
+    for (auto each : prob)
+      std::cout << each << ", ";
+    std::cout << "end" <<  std::endl;
+      int index1 = vector_utils::FindIf(prob, (float)1.0);
+      auto idx_iter = std::find(prob.begin(), prob.end(), 1.0);
+      int index2 = idx_iter - prob.begin();
+      std::cout << "vector_utils::findIf: " << index1 << " std find: " << index2 << std::endl;
+
   }
   return sampled_idx;
 }
