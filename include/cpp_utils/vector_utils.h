@@ -76,6 +76,11 @@ void Sort(const VecContainer<T> &v, VecContainer<T> *v_sorted,
   std::sort(v_sorted->begin(), v_sorted->end());
 }
 
+// Sorts a VecContainer `v` of type `T` in ascending order via `varg`, where `varg` of type ArgContainer is
+// a vector with the same size as `v`, where the ith entry of `varg` corresponds to the cost of
+// the ith entry of `v`. Outputs the sorted result `v_sorted` in the same container type VecContainer, 
+// and the sorted costs `varg_sorted` in container type ArgContainer. Note that `v` and `v_sorted` cannot be
+// the same object
 template <typename T,
           template <typename, typename = std::allocator<T>> class VecContainer,
           template <typename, typename = std::allocator<float>> class ArgContainer>
@@ -380,10 +385,11 @@ void RemoveAtIndices(std::deque<T>& v, Container<int>& indices)
   return;
 }
 
-// Return a slice from position m to n inclusive. Credit: https://www.techiedelight.com/get-slice-sub-vector-from-vector-cpp/
+// Return a slice from position m to n inclusive. 
 template<typename T>
 std::vector<T> Slice(std::vector<T> &v, int m, int n)
 {
+  if(m > n || m + n >= v.size()) return v;
   std::vector<T>vec(n-m+1);
   std::copy(v.begin() + m, v.begin() + n + 1, vec.begin());
   return vec;
