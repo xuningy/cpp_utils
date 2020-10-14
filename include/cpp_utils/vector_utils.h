@@ -67,15 +67,30 @@ void Sort(const VecContainer<T> &v, VecContainer<T> *v_sorted,
   // Initialize original index locations.
   IdxContainer<size_t> idx(v.size());
   std::iota(idx.begin(), idx.end(), 0);
-
   // Sort indexes based on comparing values in v.
   std::sort(idx.begin(), idx.end(),
             [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
-
   // Populate the output parameters.
   *idx_sorted = idx;
   *v_sorted = v;
   std::sort(v_sorted->begin(), v_sorted->end());
+}
+
+// Sorts a VecContainer `v` of type `T` in ascending order via `varg`, where `varg` of type ArgContainer is
+// a vector with the same size as `v`, where the ith entry of `varg` corresponds to the cost of
+// the ith entry of `v`. Outputs the sorted result `v_sorted` in the same container type VecContainer, 
+// and the sorted costs `varg_sorted` in container type ArgContainer. Note that `v` and `v_sorted` cannot be
+// the same object
+template <typename T,
+          template <typename, typename = std::allocator<T>> class VecContainer,
+          template <typename, typename = std::allocator<float>> class ArgContainer>
+void ArgSort(const VecContainer<T> &v, VecContainer<T> *v_sorted, const ArgContainer<float> &varg, ArgContainer<float> *varg_sorted) {
+  std::vector<size_t> args_sorted_idx;
+  Sort<float>(varg, varg_sorted, &args_sorted_idx);
+  // Push escape points by sorted cost
+  for(uint i = 0; i < v.size(); i++) {
+    v_sorted->push_back(v[args_sorted_idx[i]]);
+  }
 }
 
 // =========================== FIND OPERATIONS =============================
@@ -382,5 +397,14 @@ void RemoveAtIndices(std::deque<T>& v, Container<int>& indices)
   return;
 }
 
+// Return a slice from position m to n inclusive. 
+template<typename T>
+std::vector<T> Slice(std::vector<T> &v, int m, int n)
+{
+  if(m > n || m + n >= v.size()) return v;
+  std::vector<T>vec(n-m+1);
+  std::copy(v.begin() + m, v.begin() + n + 1, vec.begin());
+  return vec;
+}
 
 } // namespace vector_utils
