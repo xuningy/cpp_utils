@@ -310,10 +310,12 @@ Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
     // std::cout << "sampled " << value << std::endl;
     if (std::find(sampled_idx.begin(), sampled_idx.end(), value) == sampled_idx.end()) {
       sampled_idx.push_back(value);
-      std::cout << "current sampled_idx contains: " << std::flush;
-      for (auto each : sampled_idx)
-        std::cout << each << ", ";
-      std::cout << std::endl;
+
+      // For debugging
+      // std::cout << "current sampled_idx contains: " << std::flush;
+      // for (auto each : sampled_idx)
+      //   std::cout << each << ", ";
+      // std::cout << std::endl;
     }
     iter++;
   }
