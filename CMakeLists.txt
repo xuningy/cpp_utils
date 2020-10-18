@@ -3,15 +3,20 @@ cmake_minimum_required(VERSION 2.8.3)
 project(cpp_utils)
 
 find_package(catkin REQUIRED)
-
+find_package(Eigen3 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS})
-link_directories(${catkin_LIBRARY_DIRS})
+catkin_package(
+	INCLUDE_DIRS include
+	LIBRARIES ${PROJECT_NAME}
+)
+
+include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
+link_directories(${catkin_LIBRARY_DIRS} ${EIGEN3_INCLUDE_DIR})
 add_definitions(${catkin_DEFINITIONS})
 
 add_library(${PROJECT_NAME} src/${PROJECT_NAME}/${PROJECT_NAME}.cpp)
