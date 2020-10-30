@@ -242,6 +242,8 @@ Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
   const Container<T> &prob, const int k, std::mt19937& generator) {
   size_t N = prob.size();
 
+  constexpr static size_t MAX_SAMPLE_TERMINATION = 10000;
+
   // Check that the input arguments are valid.
   if (N == 0)
     throw std::invalid_argument("[sample_utils::DiscreteSampleWithoutReplacement] probability vector size needs to be larger than 1!");
@@ -305,7 +307,7 @@ Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
   std::discrete_distribution<> distribution(prob.begin(), prob.end());
 
   int iter = 0;
-  while (sampled_idx.size() < k && iter < N) {
+  while (sampled_idx.size() < k && iter < MAX_SAMPLE_TERMINATION) {
     int value = distribution(generator);
     // std::cout << "sampled " << value << std::endl;
     if (std::find(sampled_idx.begin(), sampled_idx.end(), value) == sampled_idx.end()) {
@@ -320,16 +322,22 @@ Container<int, std::allocator<int>> DiscreteSampleWithoutReplacement(
     iter++;
   }
 
-  if (iter == N)
+  if (iter == MAX_SAMPLE_TERMINATION)
   {
     std::cout << "terminated early, the probability vector looks like " << std::flush;
     for (auto each : prob)
       std::cout << each << ", ";
     std::cout << "end" <<  std::endl;
-      int index1 = vector_utils::FindIf(prob, (float)1.0);
-      auto idx_iter = std::find(prob.begin(), prob.end(), 1.0);
-      int index2 = idx_iter - prob.begin();
-      std::cout << "vector_utils::findIf: " << index1 << " std find: " << index2 << std::endl;
+
+    std::cout << "sampled_idx looks like: " << std::endl;
+    for (auto each : sampled_idx)
+      std::cout << each << ", ";
+    std::cout << "end" <<  std::endl;
+
+      // int index1 = vector_utils::FindIf(prob, (float)1.0);
+      // auto idx_iter = std::find(prob.begin(), prob.end(), 1.0);
+      // int index2 = idx_iter - prob.begin();
+      // std::cout << "vector_utils::findIf: " << index1 << " std find: " << index2 << std::endl;
 
   }
   return sampled_idx;
