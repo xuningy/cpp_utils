@@ -1,9 +1,12 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.1)
 
 project(cpp_utils)
 
+set(CMAKE_CXX_STANDARD 17)
+
 find_package(catkin REQUIRED)
 find_package(Eigen3 REQUIRED)
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
@@ -11,7 +14,7 @@ catkin_package(
 )
 
 catkin_package(
-	INCLUDE_DIRS include
+	INCLUDE_DIRS include ${EIGEN3_INCLUDE_DIRS}
 	LIBRARIES ${PROJECT_NAME}
 )
 

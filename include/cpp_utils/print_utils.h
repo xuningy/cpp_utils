@@ -93,6 +93,21 @@ namespace print_utils {
     }
   }
 
+  // Print a std::vector of Eigen vectors or matrix, and its size.
+  template <typename T, int rows, int cols>
+  inline void printVectorOfEigen(const std::vector<Eigen::Matrix<T, rows, cols>> &vec, const std::string name = "") {
+    Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+    Eigen::IOFormat OctaveVecFmt(4, 0, ", ", " ", "", "", "[", "]");
+
+    std::cout << name << " (" << vec.size() << "):" << std::endl;
+    int i = 0;
+    for (auto& mat : vec) {
+      print(mat, std::string("\ti=") + std::to_string(i));
+      i++;
+    }
+
+  }
+
   // Print time difference.
   inline void print(std::chrono::high_resolution_clock::time_point t1, std::chrono::high_resolution_clock::time_point t2) {
     std::chrono::duration<float> dur = t1 - t2;
