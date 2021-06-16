@@ -244,4 +244,92 @@ inline Eigen::MatrixXd differencingMatrix(int N)
   return M;
 }
 
+
+// template <typename Derived,
+//           template <typename, typename = std::allocator<Eigen::MatrixBase<Derived>>> class Container>
+// inline Container<Eigen::MatrixBase<Derived>> Diff(const Container< Eigen::MatrixBase<Derived>>& vec)
+// {
+//   std::cout << "vec size: " << vec.size() << std::endl;
+//   Container<Eigen::MatrixBase<Derived>> difference;
+//   for (size_t i = 1; i < vec.size(); i++)
+//   {
+//     difference.push_back(vec[i]-vec[i-1]);
+//   }
+//
+//   std::cout << "diff size: " << difference.size() << std::endl;
+//   return difference;
+// }
+
+template <template <typename, typename = std::allocator<Eigen::Vector3d>> class Container>
+inline Container<Eigen::Vector3d> Diff(const Container< Eigen::Vector3d>& vec)
+{
+  std::cout << "vec size: " << vec.size() << std::endl;
+  Container<Eigen::Vector3d> difference;
+  for (size_t i = 1; i < vec.size(); i++)
+  {
+    difference.push_back(vec[i]-vec[i-1]);
+  }
+
+  std::cout << "diff size: " << difference.size() << std::endl;
+  return difference;
+}
+
+// template <typename Derived,
+//           template <typename, typename = std::allocator<Eigen::MatrixBase<Derived>>> class Container>
+// inline Container<Eigen::MatrixBase<Derived>> Dot(const Container< Eigen::MatrixBase<Derived>>& vec1, const Container< Eigen::MatrixBase<Derived>>& vec2)
+// {
+//   if (vec1.size() != vec2.size())
+//   {
+//     std::cout << "vec1 and vec2 are not the same size" << std::endl;
+//   }
+//
+//   Container<Eigen::MatrixBase<Derived>> dot_product;
+//   for (size_t i = 0; i < vec1.size(); i++)
+//   {
+//     dot_product.push_back(vec1[i].dot(vec2[i]));
+//   }
+//
+//   return dot_product;
+// }
+
+// normalize each point one by one.
+inline std::vector<Eigen::Vector3d> PointwiseNormalize(const std::vector<Eigen::Vector3d>& vec)
+{
+  std::vector<Eigen::Vector3d> vec_normalized;
+  for (auto& p : vec)
+  {
+    vec_normalized.push_back(p.normalized());
+  }
+  return vec_normalized;
+}
+
+inline std::vector<double> Dot(const std::vector<Eigen::Vector3d>& vec1, const std::vector<Eigen::Vector3d>& vec2)
+{
+  if (vec1.size() != vec2.size())
+  {
+    std::cout << "vec1 and vec2 are not the same size" << std::endl;
+  }
+
+  std::vector<double> dot_product;
+  for (size_t i = 0; i < vec1.size(); i++)
+  {
+    double dp = vec1[i].dot(vec2[i]);
+    dot_product.push_back(dp);
+  }
+
+  return dot_product;
+}
+
+// Sum a vector
+template<typename T>
+T Sum(std::vector<T> &vec)
+{
+  T sum = 0;
+  for (auto &elem : vec) {
+    sum += elem;
+  }
+  return sum;
+}
+
+
 } // namespace linalg_utils

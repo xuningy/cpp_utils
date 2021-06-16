@@ -78,7 +78,7 @@ void Sort(const VecContainer<T> &v, VecContainer<T> *v_sorted,
 
 // Sorts a VecContainer `v` of type `T` in ascending order via `varg`, where `varg` of type ArgContainer is
 // a vector with the same size as `v`, where the ith entry of `varg` corresponds to the cost of
-// the ith entry of `v`. Outputs the sorted result `v_sorted` in the same container type VecContainer, 
+// the ith entry of `v`. Outputs the sorted result `v_sorted` in the same container type VecContainer,
 // and the sorted costs `varg_sorted` in container type ArgContainer. Note that `v` and `v_sorted` cannot be
 // the same object
 template <typename T,
@@ -397,7 +397,7 @@ void RemoveAtIndices(std::deque<T>& v, Container<int>& indices)
   return;
 }
 
-// Return a slice from position m to n inclusive. 
+// Return a slice from position m to n inclusive.
 template<typename T>
 std::vector<T> Slice(std::vector<T> &v, int m, int n)
 {
@@ -406,5 +406,7 @@ std::vector<T> Slice(std::vector<T> &v, int m, int n)
   std::copy(v.begin() + m, v.begin() + n + 1, vec.begin());
   return vec;
 }
+
+
 
 } // namespace vector_utils
