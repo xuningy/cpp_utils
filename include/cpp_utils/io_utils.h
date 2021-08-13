@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -93,6 +94,7 @@ std::vector<std::vector<T>> CSVReader(std::string filename) {
   }
   std::vector<std::vector<T>> data;
 
+  std::cout << "[io_utils::CSVReader] begin reading data...";
 
   while (fin) {
 
@@ -100,24 +102,38 @@ std::vector<std::vector<T>> CSVReader(std::string filename) {
     std::string line, word;
 
     std::getline(fin, line, '\n');
+    // std::cout << "line: " << line.c_str() << std::endl; // DEBUG
     if (line.empty())
       continue;
 
     std::istringstream s(line);
 
     while (std::getline(s, word, ',')) {
-      // std::cout << word.c_str() << ", ";
+      T val;
+      // std::cout << "word: " << word.c_str() << std::endl; // DEBUG
       if (std::is_same<T, double>::value)
-        row.push_back(std::stod(word));
+        try { val = std::stod(word); }
+        catch (const std::invalid_argument& ia) {
+          std::cout << "[io_utils::CSVReader] Invalid argument with input '" << word.c_str() << "': " << ia.what() << std::endl;
+        }
       else if (std::is_same<T, float>::value)
-        row.push_back(std::stof(word));
+        try { val = std::stof(word); }
+        catch (const std::invalid_argument& ia) {
+          std::cout << "[io_utils::CSVReader] Invalid argument with input '" << word.c_str() << "': " << ia.what() << std::endl;
+        }
       else if (std::is_same<T, int>::value)
-        row.push_back(std::stoi(word));
+        try { val = std::stoi(word); }
+        catch (const std::invalid_argument& ia) {
+          std::cout << "[io_utils::CSVReader] Invalid argument with input '" << word.c_str() << "': " << ia.what() << std::endl;
+        }
+
+      row.push_back(val);
     }
 
     // add row to data.
     data.push_back(row);
   }
+  std::cout << "complete." << std::endl;
 
   return data;
 }
@@ -132,6 +148,15 @@ void printCSV(const std::vector<std::vector<T>>& data) {
     std::cout << "endl" << std::endl;
   }
   return;
+}
+
+// Similar to std::to_string, converts a float/double to std::string with fixed precision.
+template <typename T>
+std::string num2string(const T val, int n = 5)
+{
+  std::stringstream ss;
+  ss << std::fixed << std::setprecision(n) << val;
+  return ss.str();
 }
 
 } // namespace io

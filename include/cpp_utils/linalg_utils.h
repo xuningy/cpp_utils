@@ -263,14 +263,12 @@ inline Eigen::MatrixXd differencingMatrix(int N)
 template <template <typename, typename = std::allocator<Eigen::Vector3d>> class Container>
 inline Container<Eigen::Vector3d> Diff(const Container< Eigen::Vector3d>& vec)
 {
-  std::cout << "vec size: " << vec.size() << std::endl;
   Container<Eigen::Vector3d> difference;
   for (size_t i = 1; i < vec.size(); i++)
   {
     difference.push_back(vec[i]-vec[i-1]);
   }
 
-  std::cout << "diff size: " << difference.size() << std::endl;
   return difference;
 }
 
